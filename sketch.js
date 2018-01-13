@@ -73,7 +73,10 @@ function draw(){
   drawFace();
   drawBody();
   drawEyes();
-  drawRizoFromJson();
+  for (var numrizo = 0; numrizo < 11; numrizo +=1){
+    drawRizoFromJson(numrizo);
+  }
+  
   // then sets up the way the hair is going to move
   var angle = wind_speed + pow(theta, wind_speed*4/6);
   wind_offset = 5*(wind_speed+pow(2,wind_speed));
@@ -509,21 +512,24 @@ function drawEjeRizo(data_points, weight, xpos, ypos) {
 DEV - testing This
 */
 
-function drawRizoFromJson() {
-  var x = 0;
-  var y = 0;
-  var data_points = superDani_coord.objects[0].coord;
+function drawRizoFromJson(num_rizo) {
+  var x = -61;
+  var y = -61;
+  var data_points = superDani_coord.objects[num_rizo].coord;
   var num_coord = data_points.length;
   var num_points = (data_points.length/2-2)/3;
   var rizo_points = new Array(num_coord);
   
-  var weight = 1826*superDani_coord.objects[0].weight;
+  var weight = 1826*superDani_coord.objects[num_rizo].weight;
   
   // Suma X e Y a todas las coordenadas menos las del punto de origen y su manipulador (4 primeras coordenadas)
   // además, escala para que se ajuste
+  
+ 
   for(var coord=0; coord < num_coord-1; coord +=2){
     rizo_points[coord] = 1826*data_points[coord] + x;
     rizo_points[coord+1] = 1826*data_points[coord+1] + y;
+    
   }
   strokeWeight(weight);
   stroke(0,250,250);
