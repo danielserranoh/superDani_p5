@@ -1,10 +1,11 @@
-{"superDani_coord": [
+{"name": "superDani",
+ "objects": [{
 
-  {"rizo0": {
+    "name": "rizo0",
     "type": "rizo",
     "index": 0,
     "normalized": true,
-    "weight": 0.0542,
+    "weight": 0.0208,
     "coord": [
       0.7826,	0.4765,
       0.8269,	0.4255,
@@ -26,13 +27,13 @@
       0.7826,	0.2798,
       0.7705,	0.2903
       ]
-    }},
 
-  {"rizo1": {
+  },{
+    "name": "rizo1",
     "type": "rizo",
     "index": 1,
     "normalized": true,
-    "weight": 0.0509,
+    "weight": 0.0175,
     "coord": [
       0.7453, 0.4808,
       0.7306, 0.4858,
@@ -57,13 +58,14 @@
       0.4825, 0.138,
       0.4825, 0.1676
       ]
-    }},
 
-    {"rizo2": {
+  },{
+
+      "name": "rizo2",
       "type": "rizo",
       "index": 2,
       "normalized": true,
-      "weight": 0.0487,
+      "weight": 0.0153,
       "coord": [
         0.6506,	0.4912,
         0.6084,	0.5082,
@@ -83,5 +85,5 @@
         0.5635,	0.3483,
         0.0334, 0.0000
         ]
-      }}
+      }
 ]}

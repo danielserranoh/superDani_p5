@@ -1,6 +1,7 @@
 /* TRASPASO DE supedDani.pde a javascript para correr en P5 */
 
 //Global Varibles
+var superDani_coord;
 var eye_mode = "normal";
 var CONTEXT_MODE ="breeze";
 var wind_speed = 0;
@@ -8,6 +9,8 @@ var wind_offset = 0;
 var theta = 0.0;
 
 var eye_separation = [124, -20];  //<---------------------------- WARNING TESTING
+
+
 
 //DATOS DE LOS RIZOS - SE CARGARAN EN EL FUTURO DESDE CSV o SVG y hay que normalizarlos
 // formato: (vertice1, puntoControlVertice1to2, puntoControlVertice2to1, vertice2, puntoControlVertice2to3, puntoControlVertice3to2, vertice3);
@@ -28,6 +31,19 @@ var careto = [1036,1344,1053,1344, 1056,1448, 1207,1418, 1358,1388, 1443,1272, 1
 // flag de testing: 1 = activado;
 var construction = 1;
 
+function preload() {
+  // Get the most recent superDani_coord in the database
+  // read from GITHUB
+  /*var url =
+   'https://github.com/danielserranoh/superDani_p5/' +
+    'data/superDani_coord.json';
+  superDani_coord = loadJSON(url);
+  */
+  // read from local
+  superDani_coord = loadJSON('/data/superDani_coord.json');
+}
+
+
 function setup() {
   //setup the canvas
     createCanvas(1920, 1920);
@@ -47,14 +63,17 @@ function draw(){
   background(250,250,252,102); // drawing the background as the fist function should help redraw the sceen every frame
   // Note, by allowing some transparency, there is a nice "following+blurring" effect
 
-  theta += 0.02;
+
+  // in order to be able to separate concerns, the angle is going to be referenced to the p5 system variable frameCount
+  //theta += 0.02;
+  theta = frameCount/50;
   translate(0,-200);
 
   // Launches all the functions drawing superDani
   drawFace();
   drawBody();
   drawEyes();
-
+  drawRizoFromJson();
   // then sets up the way the hair is going to move
   var angle = wind_speed + pow(theta, wind_speed*4/6);
   wind_offset = 5*(wind_speed+pow(2,wind_speed));
@@ -488,7 +507,35 @@ function drawEjeRizo(data_points, weight, xpos, ypos) {
 
 /* -----------------------
 DEV - testing This
+*/
 
+function drawRizoFromJson() {
+  var x = 0;
+  var y = 0;
+  var data_points = superDani_coord.objects[0].coord;
+  var num_coord = data_points.length;
+  var num_points = (data_points.length/2-2)/3;
+  var rizo_points = new Array(num_coord);
+  
+  var weight = 1826*superDani_coord.objects[0].weight;
+  
+  // Suma X e Y a todas las coordenadas menos las del punto de origen y su manipulador (4 primeras coordenadas)
+  // además, escala para que se ajuste
+  for(var coord=0; coord < num_coord-1; coord +=2){
+    rizo_points[coord] = 1826*data_points[coord] + x;
+    rizo_points[coord+1] = 1826*data_points[coord+1] + y;
+  }
+  strokeWeight(weight);
+  stroke(0,250,250);
+  for(var point = 0; point < num_points+1; point += 1) {
+    var c = point*6;  // coordenada inicial
+    bezier(rizo_points[c],rizo_points[c+1], rizo_points[c+2],rizo_points[c+3], rizo_points[c+4],rizo_points[c+5], rizo_points[c+6],rizo_points[c+7]);
+  }
+  stroke(10,10,10);
+}
+
+
+/*
 
 class Rizo {
   // Variables
