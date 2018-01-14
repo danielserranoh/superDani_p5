@@ -14,6 +14,10 @@
 */
 
 /* ######################## GLOBAL VARIABLES #################################### */
+// SYSTEM
+var window__width = 0;
+var window__height = 0;
+
 var superDani_coord;
 var eye_mode = "normal";
 var CONTEXT_MODE ="breeze";
@@ -47,6 +51,9 @@ function preload() {
 
 
 function setup() {
+  //load screen size at startup
+  var window__width= windowWidth;
+  var window__height = windowHeight;
   //setup the canvas
     createCanvas(1920, 1920);
     colorMode(RGB,255);
