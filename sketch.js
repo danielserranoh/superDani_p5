@@ -1,43 +1,45 @@
-/* TRASPASO DE supedDani.pde a javascript para correr en P5 */
+/* TRASPASO DE supedDani.pde a javascript para correr en P5 
 
-//Global Varibles
+    DATOS DE LOS RIZOS - SE CARGARAN DESDE JSON
+    El formato del json para las coordenadas es 
+      "coord": [ 
+        vertice1, 
+        puntoControlVertice1to2, puntoControlVertice2to1, 
+        vertice2, 
+        puntoControlVertice2to3, puntoControlVertice3to2, 
+        vertice3 
+      ]
+    este formato permite detectar errores en la escritura y en la estructura
+    En el futuro molaría cargar desde un SVG, posiblemente habría que normalizar
+*/
+
+/* ######################## GLOBAL VARIABLES #################################### */
 var superDani_coord;
 var eye_mode = "normal";
 var CONTEXT_MODE ="breeze";
 var wind_speed = 0;
 var wind_offset = 0;
 var theta = 0.0;
+var SCALE_FACTOR = 1830;
 
 var eye_separation = [124, -20];  //<---------------------------- WARNING TESTING
 
 
-
-//DATOS DE LOS RIZOS - SE CARGARAN EN EL FUTURO DESDE CSV o SVG y hay que normalizarlos
-// formato: (vertice1, puntoControlVertice1to2, puntoControlVertice2to1, vertice2, puntoControlVertice2to3, puntoControlVertice3to2, vertice3);
-var rizo0 = [1368,809, 1449,716, 1636,548, 1591,446,  1552,336, 1469,300, 1396,328, 1322,356, 1275,431, 1275,497, 1275,562, 1315,609, 1358,609, 1401,609, 1455,545, 1435,497, 1415,449, 1368,450, 1346,469];
-var rizo1 = [1300,817, 1273,826, 1189,759, 1181,663, 1173,567, 1361,261, 1202,87, 1137,30, 1032,-61, 835,58, 679,175, 716,312, 772,367, 818,405, 893,426, 930,379, 967,332, 977,249, 919,210, 861,171, 820,191, 820,245];
-var rizo2 = [1127,836, 1050,867, 1004,788, 1004, 720, 1004,652, 1099,613, 1084,530, 1069,447, 960,456, 919,487, 878,518, 853,578, 886,614, 919,650, 999,632, 968,575];
-var rizo3 = [1033,863, 828,927, 691,517, 656,417, 621,317, 552,103, 342,58, 132,13, -11,259, 1,360, -5,453, 135,574, 242,508, 289,477, 286,381, 236,340, 191,303, 158,360, 167,377];
-var rizo3b = [451,194, 386,182, 293,210, 305,304, 317,398, 507,346, 393,251];
-var rizo4 = [747,906, 670,937, 614,843, 624,790, 634,737, 680,677, 634,580, 588,483, 488,498, 446,537, 404,576, 423,648, 456,684, 489,720, 569,702, 539,645];
-var rizo4b = [246,635, 187,584, 134,655, 139,694, 144,733, 182,742, 203,694];
-var rizo5 = [791,1063, 685,1046, 660,980, 578,867, 496,754, 379,689, 289,762, 199,835, 247,935, 287,988, 327,1041, 414,1068, 456,992, 498,916, 356,831, 356,980];
-var rizo5b = [175,806, 84,806, -33,851, 65,1004, 163,1157, 242,965, 139,975];
-var rizo6 = [754,1156, 684,1098, 555,1110, 569,1244, 583,1378, 781,1307, 700,1210, 680,1186, 657,1199, 657,1215];
-var rizo6b = [877,1218, 818,1167, 772,1220, 777,1259, 782,1298, 836,1306, 827,1254];
-var careto = [1036,1344,1053,1344, 1056,1448, 1207,1418, 1358,1388, 1443,1272, 1443,1178,1443,1084, 1378,942, 1368,902, 1348,861, 1348,831, 1368,809];
-
+/* ##### FLAGS ##### */
 
 // flag de testing: 1 = activado;
 var construction = 1;
 
+
+
 function preload() {
   // Get the most recent superDani_coord in the database
-  // read from GITHUB
-  /*var url =
-   'https://github.com/danielserranoh/superDani_p5/' +
+  // read form GITHUB
+  /* por algun oscuro motivo funciona sin comentar. Pero lo que quiero es cargar el de local, y si falla el de github
+    var url =
+    'https://github.com/danielserranoh/superDani_p5/' +
     'data/superDani_coord.json';
-  superDani_coord = loadJSON(url);
+    superDani_coord = loadJSON(url, drawFromJson, failedJson);
   */
   // read from local
   superDani_coord = loadJSON('/data/superDani_coord.json');
@@ -64,19 +66,19 @@ function draw(){
   // Note, by allowing some transparency, there is a nice "following+blurring" effect
 
 
-  // in order to be able to separate concerns, the angle is going to be referenced to the p5 system variable frameCount
+  // in order to be able to separate concerns, the angle is going to be referenced to the p5's environment variable frameCount
   //theta += 0.02;
   theta = frameCount/50;
-  translate(0,-200);
+  translate(-60,-260);
 
   // Launches all the functions drawing superDani
-  drawFace();
-  drawBody();
-  drawEyes();
-  for (var numrizo = 0; numrizo < 11; numrizo +=1){
-    drawRizoFromJson(numrizo);
-  }
   
+  var num_strokes = superDani_coord.objects.length;  // calculates the number of strokes (objects) to draw
+  for (var istroke = 0; istroke < num_strokes; istroke +=1){
+    drawCharacterFromJson(istroke);
+  }
+  //drawEyes();
+  drawOjito();
   // then sets up the way the hair is going to move
   var angle = wind_speed + pow(theta, wind_speed*4/6);
   wind_offset = 5*(wind_speed+pow(2,wind_speed));
@@ -92,18 +94,6 @@ function draw(){
    var y4 = map(sin(theta + angle), -1, 1, -40, 40);
 
 
-// Launches all the functions drawing the hair
-   drawRizo(rizo0, 38, x, y);
-   drawRizo(rizo1, 32, x, y1);
-   drawRizo(rizo2, 28, x, y2);
-   drawRizo(rizo3, 30, x, y3);
-   drawRizillo(rizo3b, 25, x, y3*1/4);
-   drawRizo(rizo4, 32, x, y4);
-   drawRizillo(rizo4b, 25, x*12/10, y4);
-   drawRizo(rizo5, 30, x, y1/2);
-   drawRizillo(rizo5b, 24, x*12/10, y1/2);
-   drawRizo(rizo6, 25, x, y/3);
-   drawRizo(rizo6b, 24, x, y/3);
 
 
 
@@ -125,17 +115,17 @@ function draw(){
       break;
       case "breeze":
         stroke(10,10,10);
-         drawRizo(rizo0, 38, x, y);
-         drawRizo(rizo1, 32, x, y1);
-         drawRizo(rizo2, 28, x, y2);
-         drawRizo(rizo3, 30, x, y3);
-         drawRizillo(rizo3b, 25, x, y3*1/4);
-         drawRizo(rizo4, 32, x, y4);
-         drawRizillo(rizo4b, 25, x*12/10, y4);
-         drawRizo(rizo5, 30, x, y1/2);
-         drawRizillo(rizo5b, 24, x*12/10, y1/2);
-         drawRizo(rizo6, 25, x, y/3);
-         drawRizo(rizo6b, 24, x, y/3);
+         drawRizo(0, x, y);
+         drawRizo(1, x, y1);
+         drawRizo(2, x, y2);
+         drawRizo(3, x, y3);
+         drawRizo(7, x, y3*1/4);
+         drawRizo(4, x, y4);
+         drawRizo(8, x*12/10, y4);
+         drawRizo(5, x, y1/2);
+         drawRizo(9, x*12/10, y1/2);
+         drawRizo(6, x, y/3);
+         drawRizo(10, x, y/3);
       break;
       case "fear":
          drawEjeRizo(rizo0, 38, x, y);
@@ -272,41 +262,61 @@ function drawEyes() {
 
 
 
-function drawRizo(data_points, weight, xpos, ypos) {
+function drawRizo(num_rizo, xpos, ypos) {
+  // Test if the object is valid with a logical XOR)
+  // alternative using the ternary operator if(superDani_coord.objects[num_rizo].type ? ! "rizo" : "rizillo"){
+  if ( !superDani_coord.objects[num_rizo].type == "rizo" != !superDani_coord.objects[num_rizo].type =="rizillo"){
+    console.log("error en objeto pasado a drawRizo. Se ha pasado " + superDani_coord.objects[num_rizo].type + " Verificar en json objeto: " + num_rizo);
+    //this should be terminated here
+    
+  }
   // local variables
+  var scale_factor = SCALE_FACTOR;
   var x = xpos;
   var y = ypos;
+  var data_points = superDani_coord.objects[num_rizo].coord;
   var num_coord = data_points.length;
   var num_points = (data_points.length/2-2)/3;
   var rizo_points = new Array(num_coord); //<---------------------------- WARNING TESTING
-  //testar la integridad de la matriz:
-  //data_points.length debe ser par  mod(data_points.length/2)=0
-  //y cumplir que mod((data_points.length-2)/3)=0
+  var weight = scale_factor * superDani_coord.objects[num_rizo].weight;
+  //if testing the integrity of the matrix is needed:
+  //data_points.length debe must be !ODD =>  mod(data_points.length/2)==0
+  //and check for mod((data_points.length-2)/3)==0
+  
+  if (superDani_coord.objects[num_rizo].type == "rizo"){
+    first_moving_coord = 4; // Adds X, Y to every coordinate but the origin vertex and its handler (4 first coordinates)
+      for(coord=0; coord < 4; coord+=1) {
+        rizo_points[coord] = scale_factor * data_points[coord];
+      }
+   } else if (superDani_coord.objects[num_rizo].type == "rizillo"){
+    first_moving_coord = 0; // the behaviour must be different between a "rizillo" and a "rizo"
+   }
 
-  rizo_points[0] = data_points[0];
-  rizo_points[1] = data_points[1];
-  rizo_points[2] = data_points[2];
-  rizo_points[3] = data_points[3];
-  // Suma X e Y a todas las coordenadas menos las del punto de origen y su manipulador (4 primeras coordenadas)
-  for(var coord=4; coord < num_coord-1; coord +=2){
-    rizo_points[coord] = data_points[coord] + x;
-    rizo_points[coord+1] = data_points[coord+1] + y;
+  // // Adds X, Y any coordinate >= first_moving_coord coordinate
+  for(var icoord=first_moving_coord; icoord < num_coord-1; icoord +=2){
+    rizo_points[icoord] = scale_factor * data_points[icoord] + x;
+    rizo_points[icoord+1] = scale_factor * data_points[icoord+1] + y;
   }
+
+  //rizo_points = scale_factor * rizo_points;  // WHY IS THIS NOT WORKING?
   strokeWeight(weight);
 
   for(var point = 0; point < num_points+1; point += 1) {
     var c = point*6;  // coordenada inicial
-    bezier(rizo_points[c],rizo_points[c+1], rizo_points[c+2],rizo_points[c+3], rizo_points[c+4],rizo_points[c+5], rizo_points[c+6],rizo_points[c+7]);
-
-
-
+    bezier(
+      rizo_points[c],rizo_points[c+1], 
+      rizo_points[c+2],rizo_points[c+3], rizo_points[c+4],rizo_points[c+5], 
+      rizo_points[c+6],rizo_points[c+7]);
     // Si el flag constuction ON entonces dibuja las constuctoras de las bezier
     if (construction == 1){
       //configura trazos
       stroke(255,0,255,128);
       strokeWeight(2);
       //DIBUJA LAS CURVAS
-      bezier(data_points[c],data_points[c+1], data_points[c+2],data_points[c+3], data_points[c+4],data_points[c+5], data_points[c+6],data_points[c+7]);
+      bezier(
+        data_points[c],data_points[c+1], 
+        data_points[c+2],data_points[c+3], data_points[c+4],data_points[c+5], 
+        data_points[c+6],data_points[c+7]);
       // DIBUJA LOS PUNTOS
       ellipse(data_points[c],data_points[c+1],weight/2,weight/2);
       ellipse(data_points[c+6],data_points[c+7],weight/2,weight/2);
@@ -325,57 +335,6 @@ function drawRizo(data_points, weight, xpos, ypos) {
   }
 
 }
-
-
-
-function drawRizillo(data_points, weight, xpos, ypos) {
-  var x = xpos;
-  var y = ypos;
-  var num_coord = data_points.length;
-  var num_points = (data_points.length/2-2)/3;
-  var rizo_points = new Array(num_coord); //<---------------------------- WARNING TESTING
-  //testar la integridad de la matriz:
-  //data_points.length debe ser par  mod(data_points.length/2)=0
-  //y cumplir que mod((data_points.length-2)/3)=0
-
-
-  // Suma X e Y a todas las coordenadas menos las del punto de origen y su manipulador (4 primeras coordenadas)
-  for(var coord=0; coord < num_coord-1; coord +=2){
-    rizo_points[coord] = data_points[coord] + x;
-    rizo_points[coord+1] = data_points[coord+1] + y;
-  }
-  strokeWeight(weight);
-
-  for(var point = 0; point < num_points+1; point += 1) {
-    var c = point*6;  // coordenada inicial
-    bezier(rizo_points[c],rizo_points[c+1], rizo_points[c+2],rizo_points[c+3], rizo_points[c+4],rizo_points[c+5], rizo_points[c+6],rizo_points[c+7]);
-
-
-    // Si el flag constuction ON entonces dibuja las constuctoras de las bezier
-    if (construction == 1){
-      //configura trazos
-      stroke(255,0,255,128);
-      strokeWeight(2);
-      //DIBUJA LAS CURVAS
-      bezier(data_points[c],data_points[c+1], data_points[c+2],data_points[c+3], data_points[c+4],data_points[c+5], data_points[c+6],data_points[c+7]);
-      // DIBUJA LOS PUNTOS
-      ellipse(data_points[c],data_points[c+1],weight/2,weight/2);
-      ellipse(data_points[c+6],data_points[c+7],weight/2,weight/2);
-      // DIBUJA LOS PUNTOS DE CONTROL
-      ellipse(data_points[c+2],data_points[c+3],weight/4,weight/4);
-      ellipse(data_points[c+4],data_points[c+5],weight/4,weight/4);
-      //TRAZA LAS LINEAS DE CONTROL
-      line(data_points[c],data_points[c+1],data_points[c+2],data_points[c+3]);
-      line(data_points[c+4],data_points[c+5],data_points[c+6],data_points[c+7]);
-      //reconfigura trazos
-      stroke(10,10,10);
-      strokeWeight(weight);
-    }
-    // fin de las constructoras
-  }
-
-}
-
 
 
 /* ######################## DEBUG MODE ON ####################################*/
@@ -424,39 +383,10 @@ function drawShock(data_points, weight, xpos, ypos) {
 }
 
   /* ######################## DEBUG MODE OFF #################################### */
-function drawBody() {
-    // cuerpesito
-  strokeWeight(36);
-  bezier(730,1738, 730,1609, 801,1443, 839,1378);
-  bezier(1029,1765, 1085,1601, 1053,1344,  1036,1344);
-}
 
 
 
-function drawFace() {
-  //careto
-  strokeWeight(38);
-  beginShape();
-   //inicio frontal
-    vertex(1036,1344);
-    bezierVertex(1053,1344, 1056,1448, 1207,1418); //
-    bezierVertex(1358,1388, 1443,1272, 1443,1178);
-    bezierVertex(1443,1084, 1378,942, 1368,902);
-    bezierVertex(1348,861, 1348,831, 1368,809);
-  endShape();
-  //orejilla
-  strokeWeight(25);
-  beginShape();
-    vertex(911,1023);
-    bezierVertex(837,954, 815,1030, 820,1069);
-    bezierVertex(825,1108, 883,1122, 898,1108);
-  endShape();
-  stroke(255,0,255,128);
-  strokeWeight(2);
-  bezier(911,1023, 837,954, 815,1030, 820,1069);
-  bezier(820,1069, 825,1108, 883,1122, 898,1108);
-  stroke(10,10,10);
-}
+
 
 
 /* ######################## DEBUG MODE ON ####################################
@@ -512,30 +442,65 @@ function drawEjeRizo(data_points, weight, xpos, ypos) {
 DEV - testing This
 */
 
-function drawRizoFromJson(num_rizo) {
-  var x = -61;
-  var y = -61;
-  var data_points = superDani_coord.objects[num_rizo].coord;
+function drawOjito() {
+  
+  var scale_factor = SCALE_FACTOR;
+  //var data_points = superDani_coord.objects.OjoD.coord; // no funciona. ¿Como lo puedo hacer por el nombre?
+  var data_points = superDani_coord.objects[13].coord; // OJOD
+  var weight = superDani_coord.objects[13].weight;
+  for(var i=0; i<data_points.length; i++) {
+    data_points[i] *= scale_factor;
+  }
+  stroke(10,10,10);
+  strokeWeight(weight*scale_factor);
+  beginShape();
+    vertex(data_points[1],data_points[2]);
+    bezierVertex(data_points[3],data_points[4], data_points[5],data_points[6], data_points[7],data_points[8]);
+    bezierVertex(data_points[9],data_points[10], data_points[11],data_points[12], data_points[13],data_points[14]);
+  endShape();
+}
+
+function drawFromJson (character_data) {
+  console.log("file loaded")
+  var num_strokes = character_data.objects.length;
+  for (var istroke = 0; istroke < num_trazos; istroke +=1){
+    drawRizoFromJson(istroke);
+  }
+  
+}
+
+function failedJson(error){
+  console.log("Error en loadJSON " + error);
+}
+
+function drawCharacterFromJson(num_stroke) {
+  var scale_factor = SCALE_FACTOR;
+  var x = 0;
+  var y = 0;
+  var data_points = superDani_coord.objects[num_stroke].coord;
   var num_coord = data_points.length;
   var num_points = (data_points.length/2-2)/3;
-  var rizo_points = new Array(num_coord);
+  var stroke_points = new Array(num_coord);
   
-  var weight = 1826*superDani_coord.objects[num_rizo].weight;
+  var weight = scale_factor * superDani_coord.objects[num_stroke].weight;
   
   // Suma X e Y a todas las coordenadas menos las del punto de origen y su manipulador (4 primeras coordenadas)
   // además, escala para que se ajuste
   
  
-  for(var coord=0; coord < num_coord-1; coord +=2){
-    rizo_points[coord] = 1826*data_points[coord] + x;
-    rizo_points[coord+1] = 1826*data_points[coord+1] + y;
+  for(var icoord=0; icoord < num_coord-1; icoord +=2){
+    stroke_points[icoord] = scale_factor * data_points[icoord] + x;
+    stroke_points[icoord+1] = scale_factor * data_points[icoord+1] + y;
     
   }
   strokeWeight(weight);
   stroke(0,250,250);
   for(var point = 0; point < num_points+1; point += 1) {
     var c = point*6;  // coordenada inicial
-    bezier(rizo_points[c],rizo_points[c+1], rizo_points[c+2],rizo_points[c+3], rizo_points[c+4],rizo_points[c+5], rizo_points[c+6],rizo_points[c+7]);
+    bezier(
+      stroke_points[c],stroke_points[c+1], 
+      stroke_points[c+2],stroke_points[c+3], stroke_points[c+4],stroke_points[c+5], 
+      stroke_points[c+6],stroke_points[c+7]);
   }
   stroke(10,10,10);
 }
